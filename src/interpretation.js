@@ -391,25 +391,28 @@ export function generatePairSummary(people, flow, { monthly = false, summaries }
   const moreTension = (dominantTension[0]?.weight || 0) > (dominantTension[1]?.weight || 0) ? first : second;
   const activeSupport = activations.filter((entry) => entry.active && entry.id !== 'day-clash');
   const periodWord = monthly ? '이번 절기 구간에는' : '오늘은';
+  const modeContext = monthly
+    ? `은서는 ${first.tenGod}(${first.tenGodPlain}) 흐름이, 하나는 ${second.tenGod}(${second.tenGodPlain}) 흐름이 앞에 섭니다.`
+    : `은서는 ${first.tenGod}(${first.tenGodPlain}) 쪽이, 하나는 ${second.tenGod}(${second.tenGodPlain}) 쪽이 오늘 반응의 바탕에 먼저 깔립니다.`;
 
   let headline;
   let relationship;
   let together;
   if (axis) {
     headline = '다른 속도가 더 잘 보이는 흐름';
-    relationship = `${periodWord} 두 사람의 기본 子午 축과 하나 원국 안의 子午冲이 함께 자극될 수 있어 서로가 평소보다 조금 더 의식되거나, 같은 상황을 다르게 받아들이는 순간이 생길 수 있습니다. 다름 자체가 불편함을 뜻하지는 않습니다.`;
+    relationship = `${modeContext} ${periodWord} 두 사람의 기본 子午 축과 하나 원국 안의 子午冲이 함께 자극될 수 있어 서로가 평소보다 조금 더 의식되거나, 같은 상황을 다르게 받아들이는 순간이 생길 수 있습니다. 다름 자체가 불편함을 뜻하지는 않습니다.`;
     together = '가까이 있을수록 은서는 상대의 반응과 의미를 조금 더 살피고, 하나는 상황이 정리되면 다음 흐름으로 넘어가려는 차이가 드러날 수 있습니다. 서로의 속도를 바꾸려 하기보다 차이를 알아차리는 정도가 편합니다.';
   } else if (bothSupport) {
     headline = '편안함과 차이가 함께 보이는 흐름';
-    relationship = `${periodWord} 두 사람 모두에게 연결을 만드는 지지가 있어, 서로를 낯설게 느끼기보다 자연스럽게 받아들이는 순간이 생길 수 있습니다. 기본적인 子午의 차이는 남아 있어 완전히 같은 방식으로 반응하는 관계는 아닙니다.`;
+    relationship = `${modeContext} ${periodWord} 두 사람 모두에게 연결을 만드는 지지가 있어, 서로를 낯설게 느끼기보다 자연스럽게 받아들이는 순간이 생길 수 있습니다. 기본적인 子午의 차이는 남아 있어 완전히 같은 방식으로 반응하는 관계는 아닙니다.`;
     together = activeSupport[0]?.text || '같이 있을 때 꼭 많은 말을 하지 않아도 각자의 흐름을 유지하며 편하게 머무는 방식이 잘 맞을 수 있습니다.';
   } else if (asymmetric) {
     headline = '체감의 온도가 다를 수 있는 흐름';
-    relationship = `${periodWord} ${moreTension.name} 쪽에 조율이 필요한 신호가 조금 더 강해, 같은 만남을 두 사람이 서로 다른 무게로 받아들일 수 있습니다. 상대의 속마음을 추측하기보다 실제 반응을 그대로 보는 편이 좋습니다.`;
+    relationship = `${modeContext} ${periodWord} ${moreTension.name} 쪽에 조율이 필요한 신호가 조금 더 강해, 같은 만남을 두 사람이 서로 다른 무게로 받아들일 수 있습니다. 상대의 속마음을 추측하기보다 실제 반응을 그대로 보는 편이 좋습니다.`;
     together = '한쪽이 말수가 적거나 혼자 정리할 시간이 필요해 보여도 관계의 거리감으로 바로 연결하지 않는 편이 자연스럽습니다.';
   } else {
     headline = '각자의 리듬을 유지하며 만나는 흐름';
-    relationship = `${periodWord} 두 사람의 당일 십성과 원국에 닿는 지점이 서로 달라, 같은 공간에서도 각자 다른 데에 신경이 갈 수 있습니다. 기본적인 익숙함과 차이가 함께 있는 관계라는 바탕은 그대로 유지됩니다.`;
+    relationship = `${modeContext} ${periodWord} 두 사람의 당일 십성과 원국에 닿는 지점이 서로 달라, 같은 공간에서도 각자 다른 데에 신경이 갈 수 있습니다. 기본적인 익숙함과 차이가 함께 있는 관계라는 바탕은 그대로 유지됩니다.`;
     together = '상대를 맞추려 하기보다 각자의 컨디션을 존중하면서 짧게 반응을 주고받는 방식이 편할 수 있습니다.';
   }
 
