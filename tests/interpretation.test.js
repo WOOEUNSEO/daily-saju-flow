@@ -16,12 +16,13 @@ describe('날짜별 문장 생성', () => {
       expect(person.evidence.length).toBeLessThanOrEqual(3);
       expect(person.keySignals.some((signal) => signal.domain === 'branch')).toBe(true);
       expect(person.tags.length).toBeLessThanOrEqual(3);
-      expect(person.sections).toEqual(expect.objectContaining({ state: expect.any(String), people: expect.any(String), work: expect.any(String) }));
+      expect(person.sections).toEqual(expect.objectContaining({ state: expect.any(String), why: expect.any(String), people: expect.any(String), work: expect.any(String) }));
       expect(person.sections.state.length).toBeGreaterThan(10);
       expect(person.sections.people.length).toBeGreaterThan(10);
       expect(person.sections.work.length).toBeGreaterThan(10);
     }
-    expect(result.people[0].sections.state).toMatch(/감정|생각|마음/);
+    expect(result.people[0].sections.state).toMatch(/감정|생각|마음|현실/);
+    expect(result.people[0].sections.why).toMatch(/辛|정인|현실|지지/);
     expect(result.people[1].sections.people).toMatch(/사적인|관계|대화/);
     expect(result.pair.sections).toEqual(expect.objectContaining({
       relationship: expect.any(String), conversation: expect.any(String), together: expect.any(String), work: expect.any(String),
@@ -62,16 +63,22 @@ describe('날짜별 문장 생성', () => {
     for (const person of result.people) {
       expect(person.sentences.length).toBeGreaterThanOrEqual(3);
       expect(person.sentences.length).toBeLessThanOrEqual(5);
+      expect(person.sections.core).toBeTruthy();
       expect(person.sections.state).toBeTruthy();
       expect(person.sections.people).toBeTruthy();
       expect(person.sections.work).toBeTruthy();
+      expect(person.sections.caution).toBeTruthy();
     }
     expect(result.pair.sentences.length).toBeGreaterThanOrEqual(4);
     expect(result.pair.sentences.length).toBeLessThanOrEqual(6);
     expect(result.pair.sections.relationship).toBeTruthy();
     expect(result.pair.sections.conversation).toBeTruthy();
     expect(result.pair.sections.work).toBeTruthy();
+    expect(result.pair.sections.dynamic).toBeTruthy();
     expect(result.pair.activations.map((item) => item.id)).toEqual(['day-clash', 'shared-rat', 'rat-ox', 'rabbit-goat', 'horse-dog']);
+    expect(result.phases).toHaveLength(3);
+    expect(result.phases.map((phase) => phase.label)).toEqual(['초반', '중반', '후반']);
+    expect(result.phases.every((phase) => phase.people.length === 2 && phase.pair)).toBe(true);
   });
 
   it('60간지의 결과에 단정적 감정·예측·점수가 없다', () => {

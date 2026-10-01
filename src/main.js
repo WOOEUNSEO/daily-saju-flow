@@ -27,12 +27,18 @@ function readRoute() {
 }
 
 function personSection(person, { monthly = false } = {}) {
-  const body = person.sections
-    ? `${labeledText('상태', person.sections.state)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('일', person.sections.work)}`
-    : paragraphs(person.sentences);
+  let body;
+  if (person.sections) {
+    body = monthly
+      ? `${labeledText('이번 달 핵심', person.sections.core)}${labeledText('내면 · 컨디션', person.sections.state)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('행동 · 일', person.sections.work)}${labeledText('주의할 점', person.sections.caution)}`
+      : `${labeledText('상태', person.sections.state)}${labeledText('왜 이렇게 느껴지나', person.sections.why)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('일', person.sections.work)}`;
+  } else {
+    body = paragraphs(person.sentences);
+  }
   return `<section class="reading person-reading" aria-label="${escape(person.name)} 분석">
     <div class="reading-label"><h2>${escape(person.name)}</h2><span class="metadata">${escape(person.tenGod)}</span></div>
     <div class="reading-content"><h3>${escape(person.headline)}</h3>
+      ${monthly && person.tenGodPlain ? `<p class="ten-god-plain">${escape(person.tenGod)} · ${escape(person.tenGodPlain)}</p>` : ''}
       <div class="reading-text reading-sections">${body}</div>
       ${tags(person.tags)}${evidence(person.evidence)}
       ${!monthly && person.signals?.length ? `<details class="signal-details"><summary>분석 근거 더 보기</summary><ul>${person.signals.map((signal) => `<li>${escape(signal.evidence || signal.label || signal.keyword || signal.text)}</li>`).join('')}</ul></details>` : ''}
@@ -41,9 +47,14 @@ function personSection(person, { monthly = false } = {}) {
 }
 
 function pairSection(pair, { monthly = false } = {}) {
-  const body = pair.sections
-    ? `${labeledText(monthly ? '관계' : '오늘의 관계', pair.sections.relationship)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`
-    : paragraphs(pair.sentences);
+  let body;
+  if (pair.sections) {
+    body = monthly
+      ? `${labeledText('관계의 큰 흐름', pair.sections.relationship)}${labeledText('이번 달 두 사람의 모드', pair.sections.dynamic)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`
+      : `${labeledText('오늘의 관계', pair.sections.relationship)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`;
+  } else {
+    body = paragraphs(pair.sentences);
+  }
   return `<section class="reading pair-reading" aria-label="둘의 흐름 분석">
     <div class="reading-label"><h2>둘의 흐름</h2><span class="metadata">전체 관계</span></div>
     <div class="reading-content"><h3>${escape(pair.headline)}</h3>
@@ -82,18 +93,31 @@ function calendarView() {
 
 const formatBoundary = (iso) => `${iso.slice(0, 10).replaceAll('-', '.')} ${iso.slice(11, 16)}`;
 
+function monthPhaseFlow(phases = []) {
+  if (!phases.length) return '';
+  return `<section class="month-phases" aria-label="월 안의 흐름">
+    <div class="phase-heading"><div><p class="eyebrow">월 안의 흐름</p><h2>초반 · 중반 · 후반</h2></div><p class="metadata">각 구간의 대표 일진을 기준으로 큰 체감 포인트를 읽습니다.</p></div>
+    <div class="phase-list">${phases.map((phase) => `<div class="phase-row">
+      <div class="phase-label"><strong>${escape(phase.label)}</strong><span>${escape(phase.range)}</span><small>${escape(phase.representativeDate)} · ${escape(phase.ganZhi)} 대표</small></div>
+      <div class="phase-content">${phase.people.map((person) => `<div class="phase-person"><span>${escape(person.name)}</span><p>${escape(person.text)}</p></div>`).join('')}
+        <div class="phase-pair"><span>둘</span><p>${escape(phase.pair)}</p></div>
+      </div>
+    </div>`).join('')}</div>
+  </section>`;
+}
+
 function monthView() {
   const periods = getMonthPeriods(state.today, new Date());
   return `<div class="section-heading"><div><p class="eyebrow">이번 달부터 다음 세 달까지</p><h1>월운의 흐름</h1></div><span class="metadata">절기 기준 · 한국 시간</span></div>
-    <p class="intro-note">각 달에 들어오는 절기부터 다음 절기 전까지의 흐름입니다.</p>
+    <p class="intro-note">각 달의 십성을 중심으로 내면·관계·행동을 자세히 보고, 초반·중반·후반의 대표 일진 흐름까지 함께 정리합니다.</p>
     <div class="month-list">${periods.map((period) => {
       const result = generateMonthlySummary(period);
       return `<details class="month-item" data-month="${period.key}"><summary>
         <div class="month-topline"><span class="month-date">${period.label}</span><strong class="month-ganzi">${period.ganZhi}</strong><span class="month-state">${period.isCurrent ? '진행 중' : `${period.startTerm}부터`}</span><span class="expand-label">상세 <span aria-hidden="true">＋</span></span></div>
         <p class="month-period">${period.startTerm} ${formatBoundary(period.start)} — ${period.endTerm} ${formatBoundary(period.end)} 전</p>
-        <div class="month-ten-gods">${result.people.map((person) => `<span>${person.name}<b>${person.tenGod}</b></span>`).join('')}</div>
+        <div class="month-ten-gods">${result.people.map((person) => `<span>${escape(person.name)}<b>${escape(person.tenGod)}</b><small>${escape(person.tenGodPlain || '')}</small></span>`).join('')}</div>
         <p class="month-headline">${escape(result.pair.headline)}</p>${tags(result.pair.tags)}
-      </summary><div class="month-detail">${result.people.map((person) => personSection(person, { monthly: true })).join('')}${pairSection(result.pair, { monthly: true })}</div></details>`;
+      </summary><div class="month-detail">${result.people.map((person) => personSection(person, { monthly: true })).join('')}${pairSection(result.pair, { monthly: true })}${monthPhaseFlow(result.phases)}</div></details>`;
     }).join('')}</div>`;
 }
 

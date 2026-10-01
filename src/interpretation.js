@@ -1,4 +1,5 @@
-import { PEOPLE } from './data.js';
+import { PEOPLE, PILLAR_LABELS } from './data.js';
+import { getDayInfo, getSeoulDate } from './calendar.js';
 import { analyzePersonSignals, getKnownPillars, getGroupRelations, selectKeySignals } from './rules.js';
 
 const TEN_GOD_COPY = {
@@ -84,6 +85,143 @@ const TEN_GOD_COPY = {
   },
 };
 
+
+const TEN_GOD_DETAIL = {
+  비견: {
+    plain: '내 기준·자기 리듬·주도성',
+    direct: '남의 반응보다 내 컨디션과 내 판단이 먼저 느껴지는 쪽으로 갑니다.',
+    mechanism: '같은 오행이 겹치면 자기 감각이 커져, 평소 하던 방식과 내 기준을 더 선명하게 의식하는 흐름으로 읽습니다.',
+    caution: '내 방식이 분명한 만큼 상대의 속도가 답답하게 보일 수 있으니, 다른 방식이 틀린 것은 아니라는 여지를 두는 게 좋습니다.',
+  },
+  겁재: {
+    plain: '주변 의식·비교·조율·경쟁',
+    direct: '내가 무엇을 원하는지보다 주변 사람이 어떻게 움직이는지가 더 눈에 들어올 수 있습니다.',
+    mechanism: '같은 오행이지만 음양이 달라, 자기 에너지와 주변 사람의 움직임이 동시에 켜지는 흐름으로 봅니다.',
+    caution: '비교와 눈치가 길어지면 실제 상황보다 관계를 크게 해석하기 쉬우니 내 몫과 상대 몫을 분리해 보는 게 좋습니다.',
+  },
+  식신: {
+    plain: '표현·여유·생활감·자연스러운 행동',
+    direct: '생각이 머리에만 머물지 않고 말·행동·생활 쪽으로 빠져나가서 답답함이 줄기 쉽습니다.',
+    mechanism: '내 기운이 바깥으로 흘러나가는 십성이라, 안에서 계속 생각하기보다 직접 말하고 해보면서 정리되는 쪽으로 읽습니다.',
+    caution: '편해진 만큼 해야 할 일의 긴장감까지 낮아질 수 있어 중요한 마감은 따로 붙잡아 두는 편이 좋습니다.',
+  },
+  상관: {
+    plain: '표현력·예민한 감지·솔직함·개선 욕구',
+    direct: '평소 그냥 넘기던 차이와 불편한 점이 빨리 보여서 하고 싶은 말도 선명해질 수 있습니다.',
+    mechanism: '내 기운이 밖으로 강하게 빠지면서 관찰한 것을 바로 말이나 행동으로 바꾸려는 성질이 커지는 흐름으로 읽습니다.',
+    caution: '맞는 말을 하더라도 말의 속도가 상대보다 빠를 수 있으니 한 박자만 늦추면 불필요한 마찰을 줄이기 쉽습니다.',
+  },
+  편재: {
+    plain: '외부 활동·사람·변화 대응·기회',
+    direct: '머릿속보다 바깥 상황과 사람, 당장 움직일 일이 더 크게 느껴져 생각이 한곳에 오래 붙지 않기 쉽습니다.',
+    mechanism: '내가 통제하고 다루는 대상이 넓어지는 십성이라, 관심이 현실 바깥으로 퍼지고 즉각 대응하는 힘이 올라가는 흐름으로 봅니다.',
+    caution: '여러 자극을 동시에 잡으려 하면 산만해질 수 있으니 그날의 우선순위를 한두 개로 좁히는 편이 좋습니다.',
+  },
+  정재: {
+    plain: '현실 감각·정리·순서·결론·안정',
+    direct: '감정과 관계의 의미를 오래 붙잡기보다 지금 확인되는 사실과 해야 할 일로 생각이 좁혀져 마음이 담백해지기 쉽습니다.',
+    mechanism: '내가 다룰 수 있는 현실과 결과 쪽으로 시선이 모이는 십성이라, 머릿속 해석보다 실제 순서·마무리·생활 감각이 앞서는 흐름으로 읽습니다.',
+    caution: '현실적으로 정리되는 힘이 강한 대신 감정을 너무 빨리 “별일 아님”으로 덮지 않는 정도의 여유는 필요합니다.',
+  },
+  편관: {
+    plain: '압박·긴장·즉각 대응·집중',
+    direct: '해야 할 것과 대응할 일이 선명해져 잡생각이 줄 수 있지만, 몸은 긴장한 채로 버티는 느낌이 생길 수 있습니다.',
+    mechanism: '나를 제어하는 기운이 강하게 들어오면 선택지가 줄고 우선순위가 강제로 좁혀져 생각이 단순해지는 흐름으로 읽습니다.',
+    caution: '집중이 잘된다고 컨디션까지 좋은 것은 아닐 수 있으니 피로와 긴장을 따로 확인하는 편이 좋습니다.',
+  },
+  정관: {
+    plain: '기준·책임·질서·절제·자기 통제',
+    direct: '감정을 바로 따라가기보다 “지금 어떻게 행동하는 게 맞는가”를 먼저 생각해서 내면이 비교적 단정해지기 쉽습니다.',
+    mechanism: '나를 규칙과 기준 안에 세우는 십성이라 감정의 폭보다 질서, 책임, 적절한 선을 먼저 잡는 흐름으로 봅니다.',
+    caution: '스스로를 너무 단정하게 관리하면 답답함을 늦게 알아차릴 수 있으니 쉬는 시간까지 기준에 넣는 편이 좋습니다.',
+  },
+  편인: {
+    plain: '관찰·직감·새로운 해석·혼자 생각하기',
+    direct: '사소한 표정과 분위기까지 의미가 있어 보이고, 평소와 다른 각도로 다시 생각하고 싶어질 수 있습니다.',
+    mechanism: '나를 생해 주는 기운이 비정형적인 방식으로 들어와 생각의 가지가 늘고, 관찰·연상·해석이 넓어지는 흐름으로 읽습니다.',
+    caution: '보이는 신호가 많아지는 날일수록 확인된 사실과 내가 붙인 의미를 분리해야 과생각이 줄어듭니다.',
+  },
+  정인: {
+    plain: '이해·회복·학습·익숙한 생각·안정',
+    direct: '서두르기보다 충분히 이해하고 익숙한 맥락 안에서 마음을 정리하려는 쪽으로 갑니다.',
+    mechanism: '나를 안정적으로 생해 주는 십성이라 새로운 자극보다 이해, 정리, 회복, 익숙한 정보 쪽에 마음이 머무는 흐름으로 봅니다.',
+    caution: '생각을 정리하는 시간이 회복이 될 수도 있지만 결론을 미루는 방식으로 길어지지 않는지 확인하면 좋습니다.',
+  },
+};
+
+const DIRECT_HEADLINES = {
+  비견: '내 기준과 내 컨디션이 먼저 느껴지는 날',
+  겁재: '주변 사람과 내 속도의 차이가 더 잘 보이는 날',
+  식신: '생각이 밖으로 빠지면서 마음이 가벼워지기 쉬운 날',
+  상관: '불편한 점과 하고 싶은 말이 또렷해지는 날',
+  편재: '생각보다 바깥 상황과 사람이 더 크게 느껴지는 날',
+  정재: '생각이 덜 복잡해지고 현실 감각이 앞서는 날',
+  편관: '압박이 잡생각을 줄이지만 긴장은 남기 쉬운 날',
+  정관: '감정보다 기준과 질서가 먼저 잡히는 날',
+  편인: '작은 신호까지 의미 있게 보여 생각이 늘기 쉬운 날',
+  정인: '익숙한 생각과 이해 쪽으로 마음이 머무는 날',
+};
+
+const PERSON_TEN_GOD_EFFECT = {
+  eunseo: {
+    비견: '壬이 다시 들어오면 원래의 壬水 감각이 강해져 타인의 반응보다 “나는 지금 어떤가”가 먼저 잡힙니다.',
+    겁재: '癸가 들어오면 수 기운 자체가 늘어 생각과 감정의 흐름이 커지고, 그 안에 주변 사람의 반응까지 함께 넣어 보려는 경향이 생길 수 있습니다.',
+    식신: '甲은 壬水가 바깥으로 빠져나가는 통로라, 머릿속에서 돌던 생각을 말·행동으로 배출해 정체감을 줄이는 쪽으로 작용합니다.',
+    상관: '乙은 壬水의 생각을 더 섬세하고 날카로운 표현으로 빼내는 쪽이라, 차이를 빨리 알아차리고 말하고 싶어질 수 있습니다.',
+    편재: '丙이 들어오면 주의가 사람·일정·현실 자극 쪽으로 넓어져, 평소의 인성식 해석이 잠시 뒤로 밀릴 수 있습니다.',
+    정재: '丁은 壬에게 정재입니다. 은서는 월간·시간에 辛 정인이 두 개라 평소 관찰과 해석이 길어지기 쉬운데, 정재가 들어오면 시선이 현실·순서·결론으로 옮겨가 그 “생각 회로”가 잠깐 조용해지는 쪽으로 읽을 수 있습니다.',
+    편관: '戊土가 壬水를 강하게 잡으면 선택지가 줄고 “지금 해야 하는 것”이 앞에 서서, 생각이 많아도 행동 기준은 오히려 단순해질 수 있습니다.',
+    정관: '己土가 壬水를 정돈하면 감정의 파도보다 규칙과 기준을 먼저 세우게 되어, 스스로를 차분하게 관리하는 힘이 생길 수 있습니다.',
+    편인: '庚金은 壬水를 생하면서 새로운 관찰 포인트를 늘립니다. 원래 辛 정인이 두 개 있는 원국과 겹치면 평소보다 더 많이 보고 더 많이 연결해서 생각하기 쉽습니다.',
+    정인: '辛金이 다시 들어오면 원국의 두 辛 정인과 같은 성질이 강조되어, 익숙한 생각·기억·관찰을 오래 붙잡는 힘이 커질 수 있습니다.',
+  },
+  hana: {
+    비견: '庚이 다시 들어오면 자기 판단과 주도성이 강해져, 이미 정한 기준대로 처리하려는 힘이 커질 수 있습니다.',
+    겁재: '辛이 들어오면 같은 금 기운이 늘면서 주변 사람의 방식과 내 기준을 동시에 보게 되어, 조율이나 역할 구분을 더 의식할 수 있습니다.',
+    식신: '壬은 庚金의 기운이 바깥으로 빠지는 식신이라, 판단만 하고 끝내기보다 설명·챙김·행동으로 자연스럽게 풀어내는 쪽으로 갑니다.',
+    상관: '癸는 庚의 판단을 더 직접적인 표현으로 빼내서, 평소보다 차이와 비효율을 빨리 말하거나 고치고 싶어질 수 있습니다.',
+    편재: '甲은 庚이 직접 다루는 편재라 외부 상황, 사람, 일정 같은 여러 변수를 빠르게 정리하고 대응하는 쪽으로 에너지가 갑니다.',
+    정재: '乙은 庚에게 정재라 세부적인 현실 관리, 정확한 마무리, 챙겨야 할 사람과 일을 구체적으로 정리하는 힘이 커질 수 있습니다.',
+    편관: '丙火가 庚金을 강하게 누르면 즉시 판단하고 대응해야 한다는 긴장이 생겨, 평소보다 빠르고 단호하게 처리하는 쪽으로 갈 수 있습니다.',
+    정관: '丁火는 庚에게 정관입니다. 책임·규칙·선이 또렷해져 감정보다 “내 역할에 맞게 처리한다”는 모드가 강해질 수 있습니다.',
+    편인: '戊土가 庚金을 생하면 외부 반응보다 내부 판단과 관찰이 강해져, 바로 말하기보다 한 번 더 보고 결론을 내리려는 쪽으로 갈 수 있습니다.',
+    정인: '己土는 庚을 안정적으로 받쳐 주어, 익숙한 방식·경험·기준으로 상황을 정리하고 회복하려는 힘이 커질 수 있습니다.',
+  },
+};
+
+function strongestBranchSignals(signals, limit = 3) {
+  return signals.filter((signal) => signal.domain === 'branch' && signal.type !== 'break').slice(0, limit);
+}
+
+function relationEffect(signal) {
+  if (!signal) return '';
+  const position = signal.position || signal.positions?.[0];
+  const place = PILLAR_LABELS[position] || '원국';
+  const natal = signal.natalBranch || '';
+  const prefix = natal ? `${place} ${natal}와 ${signal.label} 관계가` : `${place} 쪽에서 ${signal.label} 관계가`;
+  const effects = {
+    combination: ' 걸려 있어 상황을 억지로 밀기보다 자연스럽게 맞추는 힘이 생깁니다.',
+    partialTrine: ' 생겨 생각·대화·행동이 한 방향으로 이어질 통로가 열립니다.',
+    trine: ' 완성되어 흩어진 관심이 한 방향으로 모이는 힘이 강해집니다.',
+    seasonal: ' 구성되어 바깥 활동과 움직임이 더 또렷해질 수 있습니다.',
+    clash: ' 걸려 있어 감정과 반응이 평소보다 크게 움직이거나 속도 차이가 선명해질 수 있습니다.',
+    harm: ' 걸려 있어 말하지 않은 기대나 미묘한 신경 쓰임이 생길 수 있습니다.',
+    punishment: ' 걸려 있어 “왜 저렇게 하지?” 같은 기준 차이가 평소보다 예민하게 느껴질 수 있습니다.',
+    triplePunishment: ' 구성되어 책임·기준·긴장을 스스로 강하게 잡는 쪽으로 갈 수 있습니다.',
+    selfPunishment: ' 겹쳐 같은 생각이나 감정을 반복해서 확인하기 쉬워집니다.',
+    repeat: ' 겹쳐 평소의 반응 패턴이 더 선명해집니다.',
+  };
+  return `${prefix}${effects[signal.type] || '이 들어옵니다.'}`;
+}
+
+function directWhy(person, flow, tenGod, signals, { monthly = false } = {}) {
+  const detail = TEN_GOD_DETAIL[tenGod];
+  const personal = PERSON_TEN_GOD_EFFECT[person.id]?.[tenGod] || detail.mechanism;
+  const relations = strongestBranchSignals(signals, monthly ? 3 : 2).map(relationEffect).filter(Boolean);
+  const relationText = relations.length ? ` 지지 쪽에서는 ${relations.join(' ')}` : '';
+  return `${personal}${relationText}`;
+}
+
 function stableIndex(key, length) {
   let hash = 2166136261;
   for (const character of String(key)) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
@@ -151,6 +289,7 @@ export function generatePersonSummary(person, flow, { monthly = false } = {}) {
   const keySignals = selectKeySignals(signals);
   const tenGod = signals.find((signal) => signal.type === 'tenGod').tenGod;
   const copy = TEN_GOD_COPY[tenGod];
+  const detail = TEN_GOD_DETAIL[tenGod];
   const seed = `${flowKey(flow)}:${person.id}:${monthly ? 'month' : 'day'}`;
   const primaryBranch = keySignals.find((signal) => signal.domain === 'branch');
   const personalBranch = pickBranchSignal(signals, ['day', 'hour']) || primaryBranch;
@@ -159,35 +298,53 @@ export function generatePersonSummary(person, flow, { monthly = false } = {}) {
   const stemSignal = keySignals.find((signal) => signal.domain === 'stem');
 
   const condition = choose(copy.condition, `${seed}:condition`);
-  const thought = person.id === 'eunseo' && ['편인', '정인'].includes(tenGod)
-    ? '원국의 두 辛 정인과 함께 관찰과 해석이 늘 수 있어, 확인된 사실과 떠오른 생각을 분리해 두면 마음이 훨씬 가벼울 수 있습니다.'
-    : person.id === 'hana' && ['子', '午'].includes(flow.branch)
-      ? '원국 안의 子午冲도 함께 자극되므로, 겉으로는 빠르게 정리해도 속에서는 다른 생각이 함께 움직일 수 있습니다.'
-      : copy.thought;
+  const personalizedEffect = PERSON_TEN_GOD_EFFECT[person.id]?.[tenGod] || detail.direct;
+  const why = directWhy(person, flow, tenGod, signals, { monthly });
   const personal = branchSentence(personalBranch, `${seed}:personal`);
   const people = socialBranch ? branchSentence(socialBranch, `${seed}:social`) : copy.social;
   const work = monthBranch
     ? `${copy.work} ${branchSentence(monthBranch, `${seed}:work`)}`
     : copy.work;
-  const extraState = stemSignal ? stemSentence(stemSignal, person) : thought;
+  const extraState = stemSignal ? stemSentence(stemSignal, person) : copy.thought;
 
-  const sections = {
-    state: unique([condition, extraState]).join(' '),
-    people: unique([copy.social, people]).join(' '),
-    work,
-  };
+  const directState = `${detail.direct} ${condition}`;
+  const peopleDirect = `${copy.social} ${people}`;
+  const workDirect = `${copy.work}${monthBranch ? ` ${relationEffect(monthBranch)}` : ''}`;
+
+  const sections = monthly
+    ? {
+        core: `${flow.ganZhi || flow.monthGanZhi || `${flow.stem}${flow.branch}`}월에서 ${flow.stem}은 ${person.name}에게 ${tenGod}입니다. 쉽게 말하면 ${detail.plain}이 핵심 주제가 됩니다. ${personalizedEffect}`,
+        state: `${directState} ${personal}`,
+        people: peopleDirect,
+        work: workDirect,
+        caution: detail.caution,
+      }
+    : {
+        state: directState,
+        why,
+        people: peopleDirect,
+        work: workDirect,
+      };
+
   const sentences = monthly
-    ? unique([condition, personal, copy.social, work, thought]).slice(0, 5)
-    : unique([sections.state, sections.people, sections.work]);
+    ? unique([sections.core, sections.state, sections.people, sections.work, sections.caution])
+    : unique([sections.state, sections.why, sections.people, sections.work]);
 
   return {
     id: person.id, name: person.name, tenGod,
-    headline: choose(copy.headline, `${seed}:headline`),
+    tenGodPlain: detail.plain,
+    headline: monthly
+      ? `${tenGod} · ${detail.plain}`
+      : DIRECT_HEADLINES[tenGod] || choose(copy.headline, `${seed}:headline`),
     sentences, sections,
+    directLine: personalizedEffect,
+    why,
     tags: unique([primaryBranch?.keyword, ...copy.keywords]).slice(0, 3),
     evidence: keySignals.map((signal) => signal.evidence),
-    signals, keySignals, condition, relationships: people, thought,
-    rationale: '당일 천간의 십성뿐 아니라 확정된 년·월·일·시주와 당일 지지의 관계를 함께 봅니다. 일지는 가까운 반응, 월지는 바깥 활동과 사회적 방식, 년지는 배경, 시지는 개인적 리듬으로 비중을 달리합니다. 하나는 출생시간 미상이라 시주를 사용하지 않습니다.',
+    signals, keySignals, condition, relationships: people, thought: copy.thought,
+    rationale: monthly
+      ? '월간 천간의 십성을 중심축으로 두고, 그 달 지지가 원국의 일지·월지·년지·시지와 만드는 관계를 함께 봅니다. 월운은 한 달 내내 같은 감정이 이어진다는 뜻이 아니라, 그 달에 반복해서 체감하기 쉬운 주제를 정리한 것입니다.'
+      : '당일 천간의 십성뿐 아니라 확정된 년·월·일·시주와 당일 지지의 관계를 함께 봅니다. 일지는 가까운 반응, 월지는 바깥 활동과 사회적 방식, 년지는 배경, 시지는 개인적 리듬으로 비중을 달리합니다. 하나는 출생시간 미상이라 시주를 사용하지 않습니다.',
   };
 }
 
@@ -263,9 +420,12 @@ export function generatePairSummary(people, flow, { monthly = false, summaries }
       ? '업무에서는 반응 속도 차이가 생겨도 역할과 우선순위를 짧게 확인하면 오히려 서로 다른 장점을 나누어 쓰기 쉽습니다.'
       : '업무에서는 말하지 않은 기준을 짐작하기보다 역할과 완료 기준을 짧게 확인하는 편이 안정적입니다.';
 
-  const sections = { relationship, conversation, together, work };
+  const dynamic = monthly
+    ? `이번 달 은서는 ${first.tenGod}(${first.tenGodPlain}) 흐름이, 하나는 ${second.tenGod}(${second.tenGodPlain}) 흐름이 앞에 섭니다. 기본 관계에서는 은서가 하나를 편인 방향으로 관찰·이해하려는 축, 하나가 은서를 식신 방향으로 반응·성장 과정을 보는 축이 있으므로, 이번 달의 각자 컨디션이 이 기본 축을 얼마나 편하게 쓰게 하는지 함께 보는 편이 정확합니다.`
+    : '';
+  const sections = monthly ? { relationship, dynamic, conversation, together, work } : { relationship, conversation, together, work };
   const sentences = monthly
-    ? unique([relationship, conversation, together, work, activeSupport[0]?.text]).slice(0, 5)
+    ? unique([relationship, dynamic, conversation, together, work, activeSupport[0]?.text]).slice(0, 6)
     : [relationship, conversation, together, work];
   const evidence = unique([
     `${first.name} ${flow.stem}=${first.tenGod}`, `${second.name} ${flow.stem}=${second.tenGod}`,
@@ -287,7 +447,49 @@ export function generateDailySummary(dayInfo) {
   return { people, pair: generatePairSummary(PEOPLE, dayInfo, { summaries: people }) };
 }
 
+function shortDate(date) {
+  return date.slice(5).replace('-', '.');
+}
+
+function phasePersonLine(summary) {
+  const strongest = strongestBranchSignals(summary.signals, 1)[0];
+  const relation = strongest ? relationEffect(strongest) : '';
+  return `${summary.tenGod} 흐름. ${summary.directLine}${relation ? ` ${relation}` : ''}`;
+}
+
+function getMonthPhases(period) {
+  if (!period.start || !period.end) return [];
+  const start = new Date(period.start);
+  const end = new Date(period.end);
+  const duration = end.getTime() - start.getTime();
+  if (!Number.isFinite(duration) || duration <= 0) return [];
+  const definitions = [
+    { id: 'early', label: '초반', from: 0, to: 1 / 3 },
+    { id: 'middle', label: '중반', from: 1 / 3, to: 2 / 3 },
+    { id: 'late', label: '후반', from: 2 / 3, to: 1 },
+  ];
+  return definitions.map((definition) => {
+    const fromInstant = new Date(start.getTime() + duration * definition.from);
+    const toInstant = new Date(start.getTime() + duration * definition.to - 60_000);
+    const representative = new Date(start.getTime() + duration * ((definition.from + definition.to) / 2));
+    const date = getSeoulDate(representative);
+    const dayInfo = getDayInfo(date);
+    const people = PEOPLE.map((person) => generatePersonSummary(person, dayInfo));
+    const pair = generatePairSummary(PEOPLE, dayInfo, { summaries: people });
+    return {
+      id: definition.id,
+      label: definition.label,
+      range: `${shortDate(getSeoulDate(fromInstant))}–${shortDate(getSeoulDate(toInstant))}`,
+      representativeDate: date,
+      ganZhi: dayInfo.dayGanZhi,
+      people: people.map((summary) => ({ id: summary.id, name: summary.name, text: phasePersonLine(summary) })),
+      pair: `${pair.headline}. ${pair.sections.relationship}`,
+    };
+  });
+}
+
 export function generateMonthlySummary(period) {
   const people = PEOPLE.map((person) => generatePersonSummary(person, period, { monthly: true }));
-  return { people, pair: generatePairSummary(PEOPLE, period, { monthly: true, summaries: people }) };
+  const pair = generatePairSummary(PEOPLE, period, { monthly: true, summaries: people });
+  return { people, pair, phases: getMonthPhases(period) };
 }

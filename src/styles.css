@@ -142,3 +142,33 @@ footer { border-top: 1px solid var(--line); padding: 22px 0 30px; margin-top: 26
   .reading-sections { gap: 12px; }
   .reading-block { grid-template-columns: 68px minmax(0, 1fr); gap: 10px; }
 }
+
+/* More explicit interpretation and detailed monthly flow. */
+.ten-god-plain { margin-top: 5px; font-size: 10px; color: var(--muted); letter-spacing: .1px; }
+.month-phases { border-top: 1px solid var(--line); padding: 24px 0 2px; }
+.phase-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 16px; }
+.phase-heading h2 { font-size: 14px; }
+.phase-heading .metadata { max-width: 360px; text-align: right; line-height: 1.7; }
+.phase-list { border-top: 1px solid var(--line); }
+.phase-row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 22px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.phase-label { display: flex; flex-direction: column; gap: 2px; }
+.phase-label strong { font-size: 12px; }
+.phase-label span { font-size: 10px; color: var(--muted); }
+.phase-label small { font-size: 9px; color: var(--muted); line-height: 1.6; }
+.phase-content { display: grid; gap: 10px; }
+.phase-person, .phase-pair { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 10px; align-items: start; }
+.phase-person span, .phase-pair span { font-size: 10px; color: var(--muted); line-height: 1.95; }
+.phase-person p, .phase-pair p { font-size: 12px; color: #5b5955; line-height: 1.9; word-break: keep-all; }
+.phase-pair { padding-top: 2px; }
+.phase-pair p { color: #4d4b47; }
+@media (max-width: 600px) {
+  .phase-heading { display: block; }
+  .phase-heading .metadata { margin-top: 4px; text-align: left; }
+  .phase-row { grid-template-columns: 1fr; gap: 10px; padding: 17px 0; }
+  .phase-label { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 7px; }
+  .phase-label small { width: 100%; }
+  .phase-person, .phase-pair { grid-template-columns: 36px minmax(0, 1fr); gap: 8px; }
+}
+.month-ten-gods span { display: inline-flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.month-ten-gods b { margin-left: 0; }
+.month-ten-gods small { font-size: 9px; color: var(--muted); }
