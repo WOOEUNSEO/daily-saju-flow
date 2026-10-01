@@ -11,6 +11,7 @@ const dotted = (date) => date.replaceAll('-', '.');
 const tags = (items) => `<div class="tags">${items.slice(0, 3).map((tag) => `<span>${escape(tag)}</span>`).join('')}</div>`;
 const paragraphs = (items) => items.map((text) => `<p>${escape(text)}</p>`).join('');
 const evidence = (items) => `<p class="evidence">${items.map(escape).join(' · ')}</p>`;
+const labeledText = (label, text) => `<div class="reading-block"><span class="reading-subtitle">${escape(label)}</span><p>${escape(text)}</p></div>`;
 
 function readRoute() {
   const [view, selected] = location.hash.slice(1).split('/');
@@ -26,10 +27,13 @@ function readRoute() {
 }
 
 function personSection(person, { monthly = false } = {}) {
+  const body = person.sections
+    ? `${labeledText('상태', person.sections.state)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('일', person.sections.work)}`
+    : paragraphs(person.sentences);
   return `<section class="reading person-reading" aria-label="${escape(person.name)} 분석">
     <div class="reading-label"><h2>${escape(person.name)}</h2><span class="metadata">${escape(person.tenGod)}</span></div>
     <div class="reading-content"><h3>${escape(person.headline)}</h3>
-      <div class="reading-text">${paragraphs(person.sentences)}</div>
+      <div class="reading-text reading-sections">${body}</div>
       ${tags(person.tags)}${evidence(person.evidence)}
       ${!monthly && person.signals?.length ? `<details class="signal-details"><summary>분석 근거 더 보기</summary><ul>${person.signals.map((signal) => `<li>${escape(signal.evidence || signal.label || signal.keyword || signal.text)}</li>`).join('')}</ul></details>` : ''}
     </div>
@@ -37,10 +41,13 @@ function personSection(person, { monthly = false } = {}) {
 }
 
 function pairSection(pair, { monthly = false } = {}) {
+  const body = pair.sections
+    ? `${labeledText(monthly ? '관계' : '오늘의 관계', pair.sections.relationship)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`
+    : paragraphs(pair.sentences);
   return `<section class="reading pair-reading" aria-label="둘의 흐름 분석">
-    <div class="reading-label"><h2>둘의 흐름</h2><span class="metadata">함께 만난다면</span></div>
+    <div class="reading-label"><h2>둘의 흐름</h2><span class="metadata">전체 관계</span></div>
     <div class="reading-content"><h3>${escape(pair.headline)}</h3>
-      <div class="reading-text">${paragraphs(pair.sentences)}</div>${tags(pair.tags)}${evidence(pair.evidence)}
+      <div class="reading-text reading-sections">${body}</div>${tags(pair.tags)}${evidence(pair.evidence)}
       ${monthly && pair.activations?.length ? `<details class="signal-details"><summary>기본 관계에 미치는 영향</summary><ul>${pair.activations.map((item) => `<li><strong>${escape(item.label)} · ${escape(item.state)}</strong> — ${escape(item.text)}</li>`).join('')}</ul></details>` : ''}
     </div>
   </section>`;

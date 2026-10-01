@@ -131,3 +131,14 @@ footer { border-top: 1px solid var(--line); padding: 22px 0 30px; margin-top: 26
   footer { font-size: 9px; margin-top: 15px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+
+/* Whole-day reading: keep work as one part of the broader condition. */
+.reading-sections { display: grid; gap: 13px; }
+.reading-sections .reading-block + .reading-block { margin-top: 0; }
+.reading-block { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 12px; align-items: start; }
+.reading-subtitle { color: var(--muted); font-size: 10px; line-height: 1.9; letter-spacing: .15px; }
+.reading-block p { margin: 0; }
+@media (max-width: 600px) {
+  .reading-sections { gap: 12px; }
+  .reading-block { grid-template-columns: 68px minmax(0, 1fr); gap: 10px; }
+}
