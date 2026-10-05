@@ -31,7 +31,7 @@ function personSection(person, { monthly = false } = {}) {
   if (person.sections) {
     body = monthly
       ? `${labeledText('이번 달 핵심 조합', person.sections.core)}${labeledText('내면 · 컨디션', person.sections.state)}${labeledText('원국과 겹치는 지점', person.sections.overlap)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('행동 · 일', person.sections.work)}${labeledText('주의할 점', person.sections.caution)}`
-      : `${labeledText('오늘의 조합', person.sections.state)}${person.sections.month ? labeledText('이번 달 바탕', person.sections.month) : ''}${labeledText('왜 이렇게 느껴지나', person.sections.why)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('일', person.sections.work)}`;
+      : `${labeledText('오늘의 조합', person.sections.state)}${person.sections.month ? labeledText('이번 달 배경', person.sections.month) : ''}${labeledText('왜 이렇게 느껴질 수 있나', person.sections.why)}${person.sections.real ? labeledText('실제로는 이렇게 느끼기 쉬워요', person.sections.real) : ''}${labeledText('사람 · 대화', person.sections.people)}${labeledText('일', person.sections.work)}`;
   } else {
     body = paragraphs(person.sentences);
   }
@@ -51,7 +51,7 @@ function pairSection(pair, { monthly = false } = {}) {
   if (pair.sections) {
     body = monthly
       ? `${labeledText('관계의 큰 흐름', pair.sections.relationship)}${labeledText('이번 달 두 사람의 조합', pair.sections.dynamic)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`
-      : `${labeledText('오늘의 관계', pair.sections.relationship)}${pair.sections.mode ? labeledText('각자의 오늘', pair.sections.mode) : ''}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`;
+      : `${labeledText('오늘 둘의 흐름', pair.sections.relationship)}${pair.sections.mode ? labeledText('각자의 오늘 조합', pair.sections.mode) : ''}${pair.sections.month ? labeledText('이번 달 배경', pair.sections.month) : ''}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`;
   } else {
     body = paragraphs(pair.sentences);
   }

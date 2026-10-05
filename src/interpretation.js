@@ -204,6 +204,68 @@ const TEN_GOD_LAYER = {
   정인: { front: '익숙한 정보와 사람을 천천히 받아들이는 힘', inner: '이해·기억·회복 쪽으로 마음을 모으는 힘', relation: '편하고 익숙한 사람에게 마음이 머물고 들은 말을 오래 기억하는 쪽' },
 };
 
+
+const CONCRETE_EXPERIENCE = {
+  비견: '실제로는 혼자 정리할 시간이 필요하거나, 남의 반응보다 내가 원하는 순서대로 움직일 때 편하다고 느끼기 쉽습니다.',
+  겁재: '실제로는 주변 사람이 누구와 어떻게 움직이는지 평소보다 잘 보이고, 내 속도와 비교하면서 관계에 신경을 조금 더 쓸 수 있습니다.',
+  식신: '실제로는 머릿속에서만 생각하기보다 말 한마디를 먼저 꺼내거나, 먹고 쉬고 움직이는 생활감이 살아나면서 답답함이 줄기 쉽습니다.',
+  상관: '실제로는 평소 그냥 넘기던 말투·순서·비효율이 빨리 보여서 “이건 이렇게 하면 되지 않나?” 같은 생각이 바로 올라올 수 있습니다.',
+  편재: '실제로는 한 가지 생각을 오래 붙잡기보다 사람·일정·눈앞의 상황으로 관심이 옮겨가고, 몸부터 움직이는 편이 자연스러울 수 있습니다.',
+  정재: '실제로는 상대 표정의 숨은 뜻을 오래 추측하기보다 “지금 확인된 건 이거야” 하고 현실적인 결론을 내릴 때 마음이 편해지기 쉽습니다.',
+  편관: '실제로는 해야 할 일이 선명해져 잡생각은 줄 수 있지만, 몸은 긴장한 채 버티고 있을 수 있어서 끝난 뒤 피로가 한꺼번에 느껴질 수 있습니다.',
+  정관: '실제로는 기분대로 반응하기보다 “지금 어떤 태도가 맞지?”를 먼저 생각해 말과 행동이 평소보다 단정해질 수 있습니다.',
+  편인: '실제로는 짧은 말이나 표정도 그냥 넘기지 않고 여러 가능성을 떠올리기 쉬워, 혼자 생각하는 시간이 길어질 수 있습니다.',
+  정인: '실제로는 익숙한 사람·익숙한 방식이 편하고, 들은 말을 오래 기억하면서 충분히 이해한 뒤 움직이고 싶어질 수 있습니다.',
+};
+
+const PERSON_BASE_STYLE = {
+  eunseo: '은서는 원국에 辛 정인이 월간과 시간에 두 번 있어 원래도 사람의 말·표정·상황을 관찰하고 의미를 연결해서 생각하는 힘이 강한 편입니다.',
+  hana: '하나는 庚金이 반복되고 월지 子와 일지 午가 함께 있어, 바깥에서는 상황을 빠르게 관찰·판단하면서도 가까운 자리에서는 역할과 기준을 지키려는 두 모드가 같이 있는 편입니다.',
+};
+
+function flowFromGanZhi(ganZhi) {
+  if (!ganZhi || ganZhi.length < 2) return null;
+  return { stem: ganZhi[0], branch: ganZhi[1], ganZhi };
+}
+
+function monthLayer(person, flow) {
+  const monthFlow = flowFromGanZhi(flow.monthGanZhi);
+  if (!monthFlow) return null;
+  const combo = tenGodPair(person, monthFlow.stem, monthFlow.branch);
+  const signals = analyzePersonSignals(person, monthFlow);
+  const branches = strongestBranchSignals(signals, 2);
+  return { flow: monthFlow, combo, signals, branches };
+}
+
+function monthRelationExplanation(layer) {
+  if (!layer?.branches?.length) return '';
+  return layer.branches.map((signal) => relationEffect(signal)).join(' ');
+}
+
+function monthBackgroundFriendly(person, flow, dayCombo) {
+  const layer = monthLayer(person, flow);
+  if (!layer) return '';
+  const m = layer.combo;
+  const stem = TEN_GOD_DETAIL[m.stemTenGod];
+  const branch = TEN_GOD_DETAIL[m.branchTenGod];
+  const repeated = m.stemTenGod === m.branchTenGod
+    ? `${m.stemTenGod}이 천간과 지지에서 겹쳐 ${stem.plain} 쪽 기운이 이번 달의 기본 분위기로 강하게 깔립니다.`
+    : `${m.stemTenGod}의 ${stem.plain}과 ${m.branchTenGod}의 ${branch.plain}이 동시에 배경에 깔립니다.`;
+  const relation = monthRelationExplanation(layer);
+  const contrast = (m.stemTenGod === dayCombo.stemTenGod || m.branchTenGod === dayCombo.branchTenGod)
+    ? `오늘의 ${dayCombo.stemTenGod} + ${dayCombo.branchTenGod} 중 일부가 월운과 겹쳐서 그 성향이 더 쉽게 체감될 수 있습니다.`
+    : `그래서 오늘 ${dayCombo.stemTenGod} + ${dayCombo.branchTenGod} 조합이 들어오더라도, 한 달 전체의 ${m.stemTenGod} + ${m.branchTenGod} 분위기가 바닥에서 계속 작동합니다.`;
+  return `이번 달 ${flow.monthGanZhi}의 흐름은 ${person.name}에게 ${m.stemTenGod} + ${m.branchTenGod}입니다. ${repeated} ${relation ? `여기에 월지 ${m.branch}가 원국과 만나면 ${relation}` : ''} ${contrast}`.trim();
+}
+
+function concreteDailyText(person, combo, signals) {
+  const first = CONCRETE_EXPERIENCE[combo.stemTenGod] || '';
+  const second = combo.branchTenGod === combo.stemTenGod ? '' : CONCRETE_EXPERIENCE[combo.branchTenGod] || '';
+  const key = strongestBranchSignals(signals, 1)[0];
+  const relation = key ? relationEffect(key) : '';
+  return `${first}${second ? ` 동시에 ${combo.branchTenGod} 쪽에서는 ${second}` : ''}${relation ? ` ${relation}` : ''}`.trim();
+}
+
 function flowGanZhi(flow) {
   return flow.ganZhi || flow.dayGanZhi || flow.monthGanZhi || `${flow.stem}${flow.branch}`;
 }
@@ -220,19 +282,11 @@ function comboExplanation(person, combo, { label = '오늘' } = {}) {
   if (combo.stemTenGod === combo.branchTenGod) {
     return `${label}은 ${combo.stemTenGod} + ${combo.branchTenGod} 조합입니다. ${combo.stem} 천간과 ${combo.branch}의 본기 ${combo.branchMainStem}가 모두 ${combo.stemTenGod}으로 읽혀, ${a.front}과 ${a.inner}이 한 방향으로 겹칩니다. 그래서 이 십성의 주제가 평소보다 더 분명하게 체감되기 쉽습니다.`;
   }
-  return `${label}은 ${combo.stemTenGod} + ${combo.branchTenGod} 조합입니다. ${combo.stem}의 ${combo.stemTenGod}이 겉에서 ${a.front}을 만들고, ${combo.branch}의 본기 ${combo.branchMainStem} ${combo.branchTenGod}이 안쪽에서 ${b.inner}을 받쳐 줍니다. 그래서 겉으로 드러나는 태도와 속에서 느끼는 반응이 한 가지 십성만 볼 때보다 더 입체적으로 나타날 수 있습니다.`;
+  return `${label}은 ${combo.stemTenGod} + ${combo.branchTenGod} 조합입니다. ${combo.stem}의 ${particle(combo.stemTenGod)} 겉에서 ${a.front}을 만들고, ${combo.branch}의 본기 ${combo.branchMainStem} ${particle(combo.branchTenGod)} 안쪽에서 ${b.inner}을 받쳐 줍니다. 그래서 겉으로 드러나는 태도와 속에서 느끼는 반응이 한 가지 십성만 볼 때보다 더 입체적으로 나타날 수 있습니다.`;
 }
 
 function monthBackground(person, flow, dayCombo) {
-  if (!flow.monthGanZhi || flow.monthGanZhi.length < 2) return '';
-  const monthCombo = tenGodPair(person, flow.monthGanZhi[0], flow.monthGanZhi[1]);
-  const sameBranch = monthCombo.branchTenGod === dayCombo.branchTenGod;
-  const sameStem = monthCombo.stemTenGod === dayCombo.stemTenGod;
-  let overlap = '';
-  if (sameBranch && sameStem) overlap = ` 특히 ${dayCombo.stemTenGod}과 ${dayCombo.branchTenGod}이 월과 일에 함께 반복되어 오늘 체감이 더 선명해질 수 있습니다.`;
-  else if (sameBranch) overlap = ` 특히 ${dayCombo.branchTenGod}이 월지와 일지에서 겹쳐, 속으로 느끼는 ${TEN_GOD_LAYER[dayCombo.branchTenGod].inner}이 평소보다 강하게 남기 쉽습니다.`;
-  else if (sameStem) overlap = ` 특히 ${dayCombo.stemTenGod}이 월간과 일간 흐름에서 반복되어, 겉으로 보이는 ${TEN_GOD_LAYER[dayCombo.stemTenGod].front}이 더 또렷해질 수 있습니다.`;
-  return `그 위에 이번 달 ${flow.monthGanZhi}는 ${monthCombo.stemTenGod} + ${monthCombo.branchTenGod} 흐름입니다. 달 전체로는 ${TEN_GOD_LAYER[monthCombo.stemTenGod].front}과 ${TEN_GOD_LAYER[monthCombo.branchTenGod].inner}이 배경에 깔려 있습니다.${overlap}`;
+  return monthBackgroundFriendly(person, flow, dayCombo);
 }
 
 function branchOverlapText(signals, limit = 4) {
@@ -286,6 +340,16 @@ function choose(variants, key) {
 
 function unique(items) {
   return [...new Set(items.filter(Boolean))];
+}
+
+function hasBatchim(value) {
+  const text = String(value || '');
+  const last = text.charCodeAt(text.length - 1);
+  return last >= 0xAC00 && last <= 0xD7A3 ? ((last - 0xAC00) % 28) !== 0 : false;
+}
+
+function particle(value, withBatchim = '이', withoutBatchim = '가') {
+  return `${value}${hasBatchim(value) ? withBatchim : withoutBatchim}`;
 }
 
 function flowKey(flow) {
@@ -356,40 +420,40 @@ export function generatePersonSummary(person, flow, { monthly = false } = {}) {
   const personalizedEffect = PERSON_TEN_GOD_EFFECT[person.id]?.[tenGod] || detail.direct;
   const comboText = comboExplanation(person, combo, { label: monthly ? '이번 달' : '오늘' });
   const overlap = branchOverlapText(signals, monthly ? 4 : 4);
-  const monthText = monthly ? '' : monthBackground(person, flow, combo);
-  const personal = branchSentence(personalBranch, `${seed}:personal`);
+  const monthText = monthly ? '' : monthBackgroundFriendly(person, flow, combo);
   const people = socialBranch ? branchSentence(socialBranch, `${seed}:social`) : copy.social;
-  const work = monthBranch
-    ? `${copy.work} ${branchSentence(monthBranch, `${seed}:work`)}`
-    : copy.work;
+  const work = monthBranch ? `${copy.work} ${branchSentence(monthBranch, `${seed}:work`)}` : copy.work;
   const extraState = stemSignal ? stemSentence(stemSignal, person) : copy.thought;
 
   const innerBlend = combo.stemTenGod === combo.branchTenGod
     ? `${detail.direct} 같은 주제가 천간과 지지에서 반복되기 때문에 평소보다 이 성향을 더 분명하게 체감하기 쉽습니다.`
-    : `${detail.direct} 동시에 ${branchTenGod} 쪽에서는 ${branchDetail.direct} 그래서 겉으로는 ${TEN_GOD_LAYER[tenGod].front}이 먼저 보여도, 속에서는 ${TEN_GOD_LAYER[branchTenGod].inner}이 같이 움직이는 날로 볼 수 있습니다.`;
-  const peopleDirect = `${TEN_GOD_LAYER[tenGod].relation}에 더해, ${TEN_GOD_LAYER[branchTenGod].relation}도 함께 작동합니다. ${people}`;
+    : `${detail.direct} 그런데 지지 쪽에는 ${branchTenGod}도 함께 있어서 ${branchDetail.direct} 즉 겉으로 드러나는 반응과 속에서 느끼는 결이 완전히 한 방향만은 아닐 수 있습니다.`;
+  const peopleDirect = `${TEN_GOD_LAYER[tenGod].relation}에 더해 ${TEN_GOD_LAYER[branchTenGod].relation}도 함께 작동합니다. ${people}`;
   const workDirect = `${copy.work}${monthBranch ? ` ${relationEffect(monthBranch)}` : ''}`;
+  const realLife = concreteDailyText(person, combo, signals);
+  const baseStyle = PERSON_BASE_STYLE[person.id] || '';
 
   const sections = monthly
     ? {
         core: `${flowGanZhi(flow)}월은 ${tenGod} + ${branchTenGod} 조합입니다. ${flow.stem}은 ${person.name}에게 ${tenGod}, ${flow.branch}의 본기 ${combo.branchMainStem}은 ${branchTenGod}으로 읽습니다. 쉽게 말하면 ${detail.plain}과 ${branchDetail.plain}이 한 달 안에서 같이 움직이는 흐름입니다.`,
         state: `${comboText} ${innerBlend}`,
-        overlap: overlap || '원국과의 지지 관계에서는 특정 한 가지 자극보다 평소의 반응 패턴이 더 크게 작동하는 달입니다.',
+        overlap: `${baseStyle} ${overlap || '원국과의 지지 관계에서는 특정 한 가지 자극보다 평소의 반응 패턴이 더 크게 작동하는 달입니다.'}`,
         people: peopleDirect,
         work: workDirect,
         caution: combo.stemTenGod === combo.branchTenGod ? detail.caution : `${detail.caution} 또 ${branchTenGod}의 ${branchDetail.caution}`,
       }
     : {
-        state: `${comboText} ${condition}`,
+        state: `${comboText} 쉽게 말하면 ${particle(detail.plain)} 겉의 반응을 만들고, ${particle(branchDetail.plain)} 속반응을 같이 만듭니다. ${condition}`,
         month: monthText,
-        why: `${personalizedEffect} ${overlap} ${extraState}`.trim(),
+        why: `${baseStyle} 오늘 흐름에서는 ${personalizedEffect} ${overlap} ${extraState}`.trim(),
+        real: realLife,
         people: peopleDirect,
         work: workDirect,
       };
 
   const sentences = monthly
     ? unique([sections.core, sections.state, sections.overlap, sections.people, sections.work, sections.caution]).slice(0, 5)
-    : unique([sections.state, sections.month, sections.why, sections.people, sections.work]);
+    : unique([sections.state, sections.month, sections.why, sections.real, sections.people, sections.work]);
 
   return {
     id: person.id, name: person.name, tenGod, branchTenGod,
@@ -412,7 +476,7 @@ export function generatePersonSummary(person, flow, { monthly = false } = {}) {
     signals, keySignals, condition, relationships: people, thought: copy.thought,
     rationale: monthly
       ? '월간 천간의 십성 하나만 보지 않고 월지의 본기 십성까지 함께 읽습니다. 그 위에 월지가 원국의 일지·월지·년지·시지와 만드는 합·충·형·해·연결을 겹쳐서, 왜 그 달에 특정한 감정·대화·행동 패턴이 나타나기 쉬운지 설명합니다.'
-      : '당일 천간 십성과 당일 지지의 본기 십성을 함께 보고, 그날이 놓인 월운의 십성 조합까지 겹쳐 읽습니다. 이후 오늘 지지가 원국의 일지·월지·년지·시지와 만드는 관계를 더해 실제 체감이 왜 단순하지 않은지 설명합니다. 하나는 출생시간 미상이라 시주를 사용하지 않습니다.',
+      : '당일 천간 십성과 당일 지지의 본기 십성을 먼저 조합하고, 그달 월운의 십성 조합과 월지가 원국을 건드리는 방식까지 함께 봅니다. 마지막으로 당일 지지가 원국의 일지·월지·년지·시지와 만드는 합·충·형·해를 겹쳐서 실제 체감이 왜 그렇게 나타날 수 있는지 풀어냅니다. 하나는 출생시간 미상이라 시주를 사용하지 않습니다.',
   };
 }
 
@@ -458,51 +522,66 @@ export function generatePairSummary(people, flow, { monthly = false, summaries }
   const asymmetric = Boolean(dominantTension[0]) !== Boolean(dominantTension[1]) || Math.abs((dominantTension[0]?.weight || 0) - (dominantTension[1]?.weight || 0)) >= 2;
   const moreTension = (dominantTension[0]?.weight || 0) > (dominantTension[1]?.weight || 0) ? first : second;
   const activeSupport = activations.filter((entry) => entry.active && entry.id !== 'day-clash');
-  const periodWord = monthly ? '이번 달에는' : '오늘은';
+  const periodWord = monthly ? '이번 달' : '오늘';
 
   const firstMode = `${first.name}는 ${first.tenGod} + ${first.branchTenGod}`;
   const secondMode = `${second.name}는 ${second.tenGod} + ${second.branchTenGod}`;
-  const modeContext = `${periodWord} ${firstMode}, ${secondMode} 조합입니다. ${first.name} 쪽은 ${TEN_GOD_LAYER[first.tenGod].front}이 앞에 서고 ${TEN_GOD_LAYER[first.branchTenGod].inner}이 속반응을 만들며, ${second.name} 쪽은 ${TEN_GOD_LAYER[second.tenGod].front}이 앞에 서고 ${TEN_GOD_LAYER[second.branchTenGod].inner}이 같이 움직입니다.`;
+  const modeContext = `${periodWord} ${firstMode}, ${secondMode} 조합입니다. 쉽게 말하면 ${first.name}는 ${TEN_GOD_DETAIL[first.tenGod].plain} 쪽 반응이 먼저 켜지고, 속에서는 ${TEN_GOD_DETAIL[first.branchTenGod].plain} 쪽 반응이 같이 움직입니다. ${second.name}는 ${TEN_GOD_DETAIL[second.tenGod].plain} 쪽 반응이 앞에 서고, ${TEN_GOD_DETAIL[second.branchTenGod].plain} 쪽 반응이 안쪽에서 함께 움직입니다.`;
+
+  const firstMonth = !monthly ? monthLayer(people[0], flow) : null;
+  const secondMonth = !monthly ? monthLayer(people[1], flow) : null;
+  const monthContext = firstMonth && secondMonth
+    ? `이번 달 ${flow.monthGanZhi}의 바탕까지 보면 ${first.name}는 ${firstMonth.combo.stemTenGod} + ${firstMonth.combo.branchTenGod}, ${second.name}는 ${secondMonth.combo.stemTenGod} + ${secondMonth.combo.branchTenGod}입니다. 그래서 하루 기분만 따로 움직이는 게 아니라, ${first.name}는 ${TEN_GOD_DETAIL[firstMonth.combo.stemTenGod].plain} 쪽의 월간 분위기 위에서 오늘을 보내고, ${second.name}는 ${TEN_GOD_DETAIL[secondMonth.combo.stemTenGod].plain} 쪽의 월간 분위기 위에서 오늘 반응합니다.`
+    : '';
+
+  const concretePair = `${first.name}는 ${CONCRETE_EXPERIENCE[first.tenGod]} ${second.name}는 ${CONCRETE_EXPERIENCE[second.tenGod]} 그래서 둘이 같은 공간에 있을 때도 ${first.name}는 무엇을 느끼고 해석하는지, ${second.name}는 무엇을 정리하고 행동하는지가 서로 다르게 보일 수 있습니다.`;
+
+  const firstKey = strongestBranchSignals(first.signals, 1)[0];
+  const secondKey = strongestBranchSignals(second.signals, 1)[0];
+  const individualOverlap = `${firstKey ? `${first.name}에게는 ${relationEffect(firstKey)}` : ''}${firstKey && secondKey ? ' ' : ''}${secondKey ? `${second.name}에게는 ${relationEffect(secondKey)}` : ''}`.trim();
 
   let headline;
   let relationship;
   let together;
   if (axis) {
-    headline = '각자의 십성은 다르고, 子午의 속도 차이도 살아나는 흐름';
-    relationship = `${modeContext} 여기에 두 사람의 기본 子午 축과 하나 원국 안의 子午冲까지 자극됩니다. 그래서 서로가 평소보다 더 눈에 들어오거나 같은 말을 두고 반응 속도가 달라질 수 있습니다. 다만 ${first.name}의 ${first.comboLabel}과 ${second.name}의 ${second.comboLabel}이 각각 반응을 한 번 걸러 주기 때문에, 차이가 곧바로 불편함으로만 나타난다고 볼 필요는 없습니다.`;
-    together = `${first.name}는 상대의 말과 분위기를 조금 더 오래 받아들이고 의미를 정리하려는 쪽으로, ${second.name}는 자신의 기준 안에서 상황이 정리되면 다음 흐름으로 넘어가려는 쪽으로 갈 수 있습니다. 그래서 같이 있을 때는 긴 설명보다 짧은 스몰토크나 자연스러운 행동에서 서로의 친숙함이 더 잘 드러날 수 있습니다.`;
+    headline = '각자의 십성은 다르고, 子午의 반응 속도 차이도 살아나는 흐름';
+    relationship = `${modeContext} 여기에 두 사람의 기본 子午 축과 하나 원국 안의 子午冲까지 자극됩니다. 그래서 같은 장면을 봐도 은서는 의미와 맥락을 조금 더 오래 붙잡고, 하나는 어느 정도 판단이 끝나면 행동이나 다음 흐름으로 넘어가기 쉬울 수 있습니다. ${individualOverlap} ${concretePair}`;
+    together = '같이 있을 때는 “누가 더 마음이 큰가”보다 반응 방식이 다르다는 점이 더 중요합니다. 은서는 짧은 말도 기억하고 의미를 이어갈 수 있고, 하나는 말보다 실제 행동이나 다음 처리로 관계를 이어갈 수 있어서, 긴 설명보다 짧은 스몰토크·같이 움직이는 행동·자연스러운 챙김에서 친숙함이 더 잘 보일 수 있습니다.';
   } else if (bothSupport) {
-    headline = '각자의 컨디션은 달라도 자연스럽게 맞춰지기 쉬운 흐름';
-    relationship = `${modeContext} 동시에 두 사람 모두 원국과 연결을 만드는 지지가 들어와, 각자 다른 컨디션을 가지고 있어도 상대를 낯설게 느끼기보다 익숙한 방식으로 받아들이기 쉽습니다. 기본 子午의 반응 차이는 남지만, 오늘은 그 차이보다 완충되는 지점이 더 눈에 띌 수 있습니다.`;
-    together = activeSupport[0]?.text || '같이 있을 때 꼭 많은 말을 하지 않아도 각자의 일을 하면서 자연스럽게 반응을 주고받는 방식이 편할 수 있습니다.';
+    headline = '각자의 컨디션은 달라도 서로에게 맞춰질 여지가 큰 흐름';
+    relationship = `${modeContext} 오늘 지지는 두 사람 모두에게 원국과 연결되는 지점을 만들어, 각자의 상태가 달라도 상대를 낯설게 느끼기보다 익숙한 방식으로 받아들이기 쉽습니다. ${individualOverlap} ${concretePair} 기본 子午의 차이는 남아 있지만 오늘은 그 차이를 바로 갈등으로 키우기보다 서로의 장점을 나눠 쓰는 쪽으로 흐르기 쉽습니다.`;
+    together = activeSupport[0]?.text || '같이 있을 때 꼭 대화를 길게 하지 않아도 각자 할 일을 하다가 필요한 순간에 자연스럽게 반응을 주고받는 방식이 편할 수 있습니다.';
   } else if (asymmetric) {
-    headline = '한쪽은 더 예민하게, 한쪽은 더 단순하게 받아들일 수 있는 흐름';
-    relationship = `${modeContext} 원국과의 겹침은 ${moreTension.name} 쪽에서 조금 더 강하게 나타나 같은 만남도 체감의 무게가 다를 수 있습니다. 이때는 누가 더 마음이 큰지보다, 각자의 십성이 무엇을 먼저 보게 만드는지를 구분해서 보는 편이 정확합니다.`;
-    together = '한쪽이 말을 더 오래 기억하거나 생각을 이어가고, 다른 쪽은 이미 자연스럽게 넘겼을 수 있습니다. 같은 장면을 다르게 저장하는 날로 보면 이해가 쉽습니다.';
+    headline = '같은 만남도 한쪽은 더 깊게, 한쪽은 더 단순하게 받아들일 수 있는 흐름';
+    relationship = `${modeContext} 원국과 겹치는 자극은 ${moreTension.name} 쪽에서 조금 더 크게 잡혀, 같은 대화나 같은 표정도 두 사람이 저장하는 무게가 달라질 수 있습니다. ${individualOverlap} ${concretePair} 이럴 때는 상대의 관심 크기를 추측하기보다 각자의 오늘 십성이 무엇을 먼저 보게 만드는지 구분해서 보는 편이 이해가 쉽습니다.`;
+    together = '한쪽은 대화를 끝낸 뒤에도 의미를 이어서 생각하고, 다른 쪽은 이미 자연스럽게 넘겼을 수 있습니다. 상대가 가볍게 넘겼다고 관계가 가벼운 것도 아니고, 오래 생각한다고 반드시 문제가 큰 것도 아닙니다.';
   } else {
-    headline = '각자의 십성 조합을 유지하면서 익숙함이 이어지는 흐름';
-    relationship = `${modeContext} 두 사람에게 오늘 지지가 닿는 위치가 서로 달라 같은 공간에 있어도 신경 쓰는 포인트는 다를 수 있습니다. 그래도 기본적으로 은서는 하나를 편인 방향으로 관찰·이해하려는 축, 하나는 은서를 식신 방향으로 반응하고 과정을 보는 축이 있어, 완전히 무관심하게 스쳐 지나가는 관계보다 서로의 반응을 자연스럽게 확인하는 쪽으로 읽힙니다.`;
-    together = '상대를 일부러 맞추려 하기보다 각자의 컨디션대로 있다가 필요한 순간에 짧게 말을 주고받는 방식이 자연스럽습니다.';
+    headline = '각자의 십성 조합 위에서 익숙함과 차이가 함께 보이는 흐름';
+    relationship = `${modeContext} 두 사람의 기본 관계에서는 은서가 하나를 편인 방향으로 관찰·이해하려는 축, 하나가 은서를 식신 방향으로 반응하고 과정을 보는 축이 있습니다. 여기에 은서 일지 子와 하나 일지 午의 차이, 은서 일지 子와 하나 월지 子의 익숙함이 동시에 있어서 “편한데 완전히 같지는 않은 사람”처럼 느껴지기 쉽습니다. ${individualOverlap} ${concretePair}`;
+    together = '상대를 일부러 맞추려 하기보다 각자의 컨디션대로 있다가 필요한 순간에 짧게 말을 주고받는 방식이 자연스럽습니다. 은서는 말의 의미를, 하나는 실제 상황과 행동을 더 먼저 볼 수 있다는 차이를 알고 있으면 훨씬 편합니다.';
   }
 
-  const conversation = pairConversation(axis, bothSupport, asymmetric, moreTension.name);
+  const conversation = axis
+    ? '대화에서는 은서가 상대의 한마디를 조금 더 오래 생각할 수 있고, 하나는 말의 뜻이 전달됐다고 느끼면 다음 주제로 넘어가기 쉬울 수 있습니다. 그래서 짧은 답이나 빠른 화제 전환을 관계의 온도로 바로 해석하지 않는 편이 좋습니다.'
+    : bothSupport
+      ? '대화는 가벼운 얘기에서 시작해서 자연스럽게 조금 깊어지는 흐름이 잘 맞습니다. 질문만 이어가기보다 각자 자기 경험이나 생각을 한두 마디씩 보태는 방식이 편할 수 있습니다.'
+      : pairConversation(axis, bothSupport, asymmetric, moreTension.name);
   const work = bothSupport
-    ? '업무에서는 상황을 관찰하는 공통점과 실질적인 협력 연결을 살리기 쉬워, 우선순위만 분명하면 호흡을 맞추기 비교적 편할 수 있습니다.'
+    ? '업무에서는 상황을 보는 공통점과 각자의 장점이 이어지기 쉬워, 우선순위만 분명하면 한 사람은 흐름을 읽고 한 사람은 결론과 실행을 잡는 식으로 호흡을 나누기 좋습니다.'
     : axis
-      ? '업무에서는 반응 속도 차이가 생겨도 역할과 우선순위를 짧게 확인하면 오히려 서로 다른 장점을 나누어 쓰기 쉽습니다.'
+      ? '업무에서는 반응 속도가 달라도 역할과 완료 기준을 짧게 확인하면 오히려 서로 다른 장점을 쓰기 쉽습니다. 은서는 놓친 맥락을 보고, 하나는 판단과 실행을 빠르게 가져가는 식의 보완이 가능합니다.'
       : '업무에서는 말하지 않은 기준을 짐작하기보다 역할과 완료 기준을 짧게 확인하는 편이 안정적입니다.';
 
-  const mode = `${firstMode}입니다. ${first.name}에게는 ${first.tenGod}이 ${TEN_GOD_LAYER[first.tenGod].front}을, ${first.branchTenGod}이 ${TEN_GOD_LAYER[first.branchTenGod].inner}을 만듭니다. 반면 ${secondMode}이고, ${second.tenGod}이 ${TEN_GOD_LAYER[second.tenGod].front}을, ${second.branchTenGod}이 ${TEN_GOD_LAYER[second.branchTenGod].inner}을 만듭니다. 그래서 같은 상황에서도 두 사람이 먼저 느끼고 표현하는 포인트가 다를 수 있습니다.`;
-
+  const mode = `${modeContext}${individualOverlap ? ` ${individualOverlap}` : ''}`;
   const dynamic = monthly
     ? `${mode} 기본 관계에서는 은서가 하나를 편인 방향으로 관찰·이해하려는 축, 하나가 은서를 식신 방향으로 반응·성장 과정을 보는 축이 있습니다. 여기에 이번 달의 ${first.comboLabel} / ${second.comboLabel}이 얹히면서, 그 기본 관계가 더 편하게 드러나는지 아니면 각자의 컨디션이 앞서는지를 함께 봅니다.`
     : mode;
   const sections = monthly
     ? { relationship, dynamic, conversation, together, work }
-    : { relationship, mode, conversation, together, work };
+    : { relationship, mode, month: monthContext, conversation, together, work };
   const sentences = monthly
     ? unique([relationship, dynamic, conversation, together, work, activeSupport[0]?.text]).slice(0, 6)
-    : unique([relationship, mode, conversation, together, work]);
+    : unique([relationship, mode, monthContext, conversation, together, work]);
   const evidence = unique([
     `${first.name} ${flow.stem}=${first.tenGod}`, `${first.name} ${flow.branch}(본기 ${first.combo.branchMainStem})=${first.branchTenGod}`,
     `${second.name} ${flow.stem}=${second.tenGod}`, `${second.name} ${flow.branch}(본기 ${second.combo.branchMainStem})=${second.branchTenGod}`,
@@ -515,7 +594,7 @@ export function generatePairSummary(people, flow, { monthly = false, summaries }
     tags: unique([axis ? '자극' : bothSupport ? '완충' : '조율', first.branchTenGod, second.branchTenGod]).slice(0, 3),
     evidence, activations,
     signals: individual.flatMap((summary) => summary.signals.map((signal) => ({ ...signal, personId: summary.id }))),
-    rationale: '두 사람의 당일 천간 십성만 비교하지 않고, 각자의 지지 본기 십성까지 먼저 조합합니다. 그다음 두 원국의 기본 관계와 오늘 지지가 건드리는 합·충·형·해를 겹쳐서, 왜 같은 상황에서도 두 사람이 다르게 느끼고 표현할 수 있는지 설명합니다.',
+    rationale: '두 사람의 당일 천간 십성 + 당일 지지 본기 십성을 먼저 읽고, 그날이 놓인 월운의 십성 조합을 배경으로 겹칩니다. 그다음 각자의 원국에서 오늘 지지가 건드리는 지점과 두 사람의 기본 子午冲·子 공통점·합과 연결을 함께 보면서, 실제 만남에서 왜 대화 속도와 체감이 달라질 수 있는지 풀어냅니다.',
   };
 }
 

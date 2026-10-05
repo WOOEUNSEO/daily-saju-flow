@@ -30,6 +30,20 @@ describe('날짜별 문장 생성', () => {
     expect(result.pair.activations.find((item) => item.id === 'rabbit-goat').active).toBe(true);
   });
 
+  it('10/10은 일진과 월운을 겹쳐 이해하기 쉬운 문장으로 설명한다', () => {
+    const result = generateDailySummary({
+      date: '2026-10-10', dayGanZhi: '丁巳', stem: '丁', branch: '巳',
+      monthGanZhi: '戊戌', yearGanZhi: '丙午',
+    });
+    expect(result.people[0].comboLabel).toBe('정재 + 편재');
+    expect(result.people[1].comboLabel).toBe('정관 + 편관');
+    expect(result.people[0].sections.month).toMatch(/이번 달 戊戌|편관/);
+    expect(result.people[1].sections.month).toMatch(/이번 달 戊戌|편인/);
+    expect(result.people[0].sections.real).toMatch(/실제로는/);
+    expect(result.pair.sections.month).toMatch(/이번 달 戊戌/);
+    expect(result.pair.sections.relationship.length).toBeGreaterThan(80);
+  });
+
   it('子와 午는 기본 子午 축과 하나 원국의 충을 함께 반영한다', () => {
     for (const branch of ['子', '午']) {
       const result = generateDailySummary({ date: `test-${branch}`, stem: '壬', branch });
