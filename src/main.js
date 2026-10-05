@@ -30,15 +30,15 @@ function personSection(person, { monthly = false } = {}) {
   let body;
   if (person.sections) {
     body = monthly
-      ? `${labeledText('이번 달 핵심', person.sections.core)}${labeledText('내면 · 컨디션', person.sections.state)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('행동 · 일', person.sections.work)}${labeledText('주의할 점', person.sections.caution)}`
-      : `${labeledText('상태', person.sections.state)}${labeledText('왜 이렇게 느껴지나', person.sections.why)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('일', person.sections.work)}`;
+      ? `${labeledText('이번 달 핵심 조합', person.sections.core)}${labeledText('내면 · 컨디션', person.sections.state)}${labeledText('원국과 겹치는 지점', person.sections.overlap)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('행동 · 일', person.sections.work)}${labeledText('주의할 점', person.sections.caution)}`
+      : `${labeledText('오늘의 조합', person.sections.state)}${person.sections.month ? labeledText('이번 달 바탕', person.sections.month) : ''}${labeledText('왜 이렇게 느껴지나', person.sections.why)}${labeledText('사람 · 대화', person.sections.people)}${labeledText('일', person.sections.work)}`;
   } else {
     body = paragraphs(person.sentences);
   }
   return `<section class="reading person-reading" aria-label="${escape(person.name)} 분석">
-    <div class="reading-label"><h2>${escape(person.name)}</h2><span class="metadata">${escape(person.tenGod)}</span></div>
+    <div class="reading-label"><h2>${escape(person.name)}</h2><span class="metadata">${escape(person.comboLabel || person.tenGod)}</span></div>
     <div class="reading-content"><h3>${escape(person.headline)}</h3>
-      ${monthly && person.tenGodPlain ? `<p class="ten-god-plain">${escape(person.tenGod)} · ${escape(person.tenGodPlain)}</p>` : ''}
+      ${monthly && person.tenGodPlain ? `<p class="ten-god-plain">${escape(person.comboLabel || person.tenGod)} · ${escape(person.tenGodPlain)}${person.branchTenGodPlain ? ` + ${escape(person.branchTenGodPlain)}` : ''}</p>` : ''}
       <div class="reading-text reading-sections">${body}</div>
       ${tags(person.tags)}${evidence(person.evidence)}
       ${!monthly && person.signals?.length ? `<details class="signal-details"><summary>분석 근거 더 보기</summary><ul>${person.signals.map((signal) => `<li>${escape(signal.evidence || signal.label || signal.keyword || signal.text)}</li>`).join('')}</ul></details>` : ''}
@@ -50,8 +50,8 @@ function pairSection(pair, { monthly = false } = {}) {
   let body;
   if (pair.sections) {
     body = monthly
-      ? `${labeledText('관계의 큰 흐름', pair.sections.relationship)}${labeledText('이번 달 두 사람의 모드', pair.sections.dynamic)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`
-      : `${labeledText('오늘의 관계', pair.sections.relationship)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`;
+      ? `${labeledText('관계의 큰 흐름', pair.sections.relationship)}${labeledText('이번 달 두 사람의 조합', pair.sections.dynamic)}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`
+      : `${labeledText('오늘의 관계', pair.sections.relationship)}${pair.sections.mode ? labeledText('각자의 오늘', pair.sections.mode) : ''}${labeledText('대화', pair.sections.conversation)}${labeledText('같이 있을 때', pair.sections.together)}${labeledText('업무', pair.sections.work)}`;
   } else {
     body = paragraphs(pair.sentences);
   }
@@ -115,7 +115,7 @@ function monthView() {
       return `<details class="month-item" data-month="${period.key}"><summary>
         <div class="month-topline"><span class="month-date">${period.label}</span><strong class="month-ganzi">${period.ganZhi}</strong><span class="month-state">${period.isCurrent ? '진행 중' : `${period.startTerm}부터`}</span><span class="expand-label">상세 <span aria-hidden="true">＋</span></span></div>
         <p class="month-period">${period.startTerm} ${formatBoundary(period.start)} — ${period.endTerm} ${formatBoundary(period.end)} 전</p>
-        <div class="month-ten-gods">${result.people.map((person) => `<span>${escape(person.name)}<b>${escape(person.tenGod)}</b><small>${escape(person.tenGodPlain || '')}</small></span>`).join('')}</div>
+        <div class="month-ten-gods">${result.people.map((person) => `<span>${escape(person.name)}<b>${escape(person.comboLabel || person.tenGod)}</b><small>${escape(person.tenGodPlain || '')}${person.branchTenGodPlain ? ` + ${escape(person.branchTenGodPlain)}` : ''}</small></span>`).join('')}</div>
         <p class="month-headline">${escape(result.pair.headline)}</p>${tags(result.pair.tags)}
       </summary><div class="month-detail">${result.people.map((person) => personSection(person, { monthly: true })).join('')}${pairSection(result.pair, { monthly: true })}${monthPhaseFlow(result.phases)}</div></details>`;
     }).join('')}</div>`;

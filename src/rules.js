@@ -7,6 +7,7 @@ export const STEMS = {
   庚: { element: '金', polarity: 'yang' }, 辛: { element: '金', polarity: 'yin' },
   壬: { element: '水', polarity: 'yang' }, 癸: { element: '水', polarity: 'yin' },
 };
+export const BRANCH_MAIN_STEM = { 子: '癸', 丑: '己', 寅: '甲', 卯: '乙', 辰: '戊', 巳: '丙', 午: '丁', 未: '己', 申: '庚', 酉: '辛', 戌: '戊', 亥: '壬' };
 const GENERATES = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
 const CONTROLS = { 木: '土', 火: '金', 土: '水', 金: '木', 水: '火' };
 export const POSITION_WEIGHTS = { day: 5, month: 4, year: 1.8, hour: 1.5 };
@@ -51,6 +52,12 @@ export function getTenGod(dayMaster, targetStem) {
   if (CONTROLS[me.element] === other.element) return same ? '편재' : '정재';
   if (CONTROLS[other.element] === me.element) return same ? '편관' : '정관';
   return same ? '편인' : '정인';
+}
+
+export function getBranchTenGod(dayMaster, branch) {
+  const mainStem = BRANCH_MAIN_STEM[branch];
+  if (!mainStem) throw new RangeError(`알 수 없는 지지: ${branch}`);
+  return { branch, mainStem, tenGod: getTenGod(dayMaster, mainStem) };
 }
 
 export function getStemRelations(source, target) {
